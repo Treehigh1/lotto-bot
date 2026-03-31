@@ -8,11 +8,20 @@ from datetime import datetime
 RESULTS_FILE = "results.json"
 
 GAME_URLS = {
-    "Weekday Windfall": "https://www.thelott.com/weekday-windfall/results",
-    "Oz Lotto": "https://www.thelott.com/oz-lotto/results",
-    "Powerball": "https://www.thelott.com/powerball/results",
-    "Saturday Lotto": "https://www.thelott.com/saturday-lotto/results",
-    "Set for Life": "https://www.thelott.com/set-for-life/results",
+    "Weekday Windfall": "https://au.lottonumbers.com/weekday-windfall/results",
+    "Oz Lotto": "https://au.lottonumbers.com/oz-lotto/results",
+    "Powerball": "https://au.lottonumbers.com/powerball/results",
+    "Saturday Lotto": "https://au.lottonumbers.com/saturday-lotto/results",
+    "Set for Life": "https://au.lottonumbers.com/set-for-life/results",
+}
+
+# Backup URLs if primary source fails or is slow to update
+BACKUP_URLS = {
+    "Weekday Windfall": "https://australia.national-lottery.com/weekday-windfall/results",
+    "Oz Lotto": "https://australia.national-lottery.com/oz-lotto/results",
+    "Powerball": "https://australia.national-lottery.com/powerball/results",
+    "Saturday Lotto": "https://australia.national-lottery.com/saturday-lotto/results",
+    "Set for Life": "https://australia.national-lottery.com/set-for-life/results",
 }
 
 # Maps game names to the keys used in Number Oracle app
@@ -207,11 +216,16 @@ def main():
     for game in games:
         print("Checking:", game)
 
+        # Try primary URL first, then backup if blocked
         url = GAME_URLS[game]
         result = parse_result(game, url)
 
+        if result is None and game in BACKUP_URLS:
+            print(f"Trying backup URL for {game}...")
+            result = parse_result(game, BACKUP_URLS[game])
+
         if result is None:
-            print(f"Skipped {game} because blocked")
+            print(f"Skipped {game} — both sources failed")
             continue
 
         # Check if this is a new result
