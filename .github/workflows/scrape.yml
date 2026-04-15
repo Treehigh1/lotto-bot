@@ -1,0 +1,53 @@
+# .github/workflows/scrape.yml
+# Runs after each draw night + a daily catch-all at 11pm AEST
+ 
+name: Scrape Lottery Results
+ 
+on:
+  schedule:
+    # All times in UTC (AEST = UTC+10, AEDT = UTC+11)
+    # Daily catch-all at 11:00pm AEST = 13:00 UTC
+    - cron: '0 13 * * *'
+    # Extra runs after specific draw nights:
+    # Tuesday 9:30pm AEST (Oz Lotto) = 11:30 UTC
+    - cron: '30 11 * * 2'
+    # Thursday 9:30pm AEST (Powerball) = 11:30 UTC
+    - cron: '30 11 * * 4'
+    # Saturday 9:30pm AEST (Saturday Lotto + Super 66) = 11:30 UTC
+    - cron: '30 11 * * 6'
+  workflow_dispatch:  # Allow manual trigger from GitHub UI
+ 
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+ 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+ 
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4
+ 
+      - name: Run scraper
+        run: python lottery.py
+ 
+      - name: Check for changes
+        id: check
+        run: |
+          git diff --quiet results.json && echo "changed=false" >> $GITHUB_OUTPUT || echo "changed=true" >> $GITHUB_OUTPUT
+ 
+      - name: Commit and push results
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          git config user.name "Number Oracle Bot"
+          git config user.email "bot@numberoracle.online"
+          git add results.json
+          DRAWS=$(python -c "import json; d=json.load(open('results.json')); total=sum(len(v) for v in d.values()); print(total)")
+          git commit -m "Update results — $DRAWS total draws [$(date -u '+%Y-%m-%d %H:%M UTC')]"
+          git push
