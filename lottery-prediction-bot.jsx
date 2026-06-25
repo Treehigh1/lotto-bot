@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+const { useState, useEffect, useCallback, useRef, useMemo } = React;
 
 /* ═══════════════════════════════════════════════════════
    ALL THE LOTT GAMES (thelott.com) — official formats
@@ -501,7 +501,7 @@ function Particles() {
 }
 
 /* ═══════ MAIN APP ═══════ */
-export default function LotteryBot() {
+function LotteryBot() {
   const [ageVerified, setAgeVerified] = useState(false);
   const [ageBlocked, setAgeBlocked] = useState(false);
   const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
@@ -1404,3 +1404,7 @@ export default function LotteryBot() {
     </div>
   );
 }
+
+
+// ── Mount the app ──────────────────────────────────────
+ReactDOM.createRoot(document.getElementById("root")).render(<LotteryBot />);
